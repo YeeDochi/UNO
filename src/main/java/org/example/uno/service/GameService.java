@@ -14,39 +14,35 @@ public class GameService {
     private final SimpMessagingTemplate messagingTemplate;
 
     // 입장 처리
+
+// [GameService.java] handleGameAction 등 다른 메서드는 기존 유지
+// join 메서드만 아래와 같이 수정해주세요.
+
     public void join(String roomId, GameMessage message) {
         BaseGameRoom room = roomService.findRoom(roomId);
         if (room == null) return;
 
-        room.enterUser(new Player(message.getSender(), message.getSenderId()));
+        // [수정] 이미 존재하는 유저라면 덮어쓰지 않고 기존 정보 유지 (패 보존)
+        Player existingPlayer = room.getUsers().get(message.getSenderId());
+        if (existingPlayer == null) {
+            room.enterUser(new Player(message.getSender(), message.getSenderId()));
+        } else {
+            // 닉네임이 바뀌었을 수도 있으니 업데이트
+            existingPlayer.setNickname(message.getSender());
+        }
 
         message.setType("JOIN");
         message.setContent(message.getSender() + "님이 입장하셨습니다.");
         broadcast(roomId, message);
 
-        // ... (기존 broadcast 코드) ...
-
-        // [Tip] 실제 구현 시 주석 해제: 기존 유저 정보를 신규 유저에게 동기화
-//        for (Player p : room.getUsers().values()) {
-//            if (p.getId().equals(message.getSenderId())) continue; // 나 자신 제외
-//
-//            GameMessage syncMsg = GameMessage.builder()
-//                    .type("JOIN")
-//                    .sender(p.getNickname())
-//                    .senderId(p.getId())
-//                    // Player의 attributes나 skinUrl을 data에 담아서 전송
-//                    .data(Map.of("semple", "semple"))
-//                    .build();
-//
-//            messagingTemplate.convertAndSend("/topic/" + roomId, syncMsg);
-//        }
+        // [동기화] 현재 게임 상태를 입장한 유저에게만이라도 확실히 보내야 함
+        // 여기서는 전체에게 뿌려서 모두의 화면을 최신으로 맞춤
         GameMessage syncMsg = new GameMessage();
         syncMsg.setType("SYNC");
         syncMsg.setRoomId(roomId);
         syncMsg.setSender("SYSTEM");
-        syncMsg.setData(room.getGameSnapshot()); // BaseGameRoom에 추가한 메서드 호출
+        syncMsg.setData(room.getGameSnapshot());
 
-        // 특정 유저에게만 보내는 게 정석이지만, 템플릿 구조상 전체 broadcast 후 클라이언트가 필터링해도 됨
         broadcast(roomId, syncMsg);
     }
 

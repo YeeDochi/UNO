@@ -83,4 +83,5 @@ const CardModule = {
             container.appendChild(area);
         });
     }
+
 };

@@ -2,9 +2,9 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>game-hub/gameName</title>
+    <title>game-hub/UNO!</title>
     <link rel="stylesheet" href="/style.css">
-    <link rel="stylesheet" href="/css/card-style.css"> <!--카드 css-->
+    <link rel="stylesheet" href="/UNO/card-style.css"> <!--카드 css-->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
@@ -29,6 +29,94 @@
         .msg-system { background: var(--bg-header); padding: 8px; border-radius: 6px; text-align: center; margin: 5px 0; color: var(--text-secondary); font-size: 12px; }
         .game-layout { display: flex; gap: 20px; }
         .room-item { padding: 12px 16px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; cursor: pointer;}
+        /* [추가] UNO 게임 스테이지 내부 레이아웃 */
+        .game-stage {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            background-color: var(--box-bg); /* 테마 배경색 적용 */
+            border: 1px solid var(--border-color); /* 테마 테두리색 적용 */
+            border-radius: 8px; /* 모서리 둥글게 */
+            overflow: hidden; /* 내용 넘침 방지 */
+        }
+
+        /* 1. 상단: 상대방 영역 */
+        #opponents-area {
+            height: 80px;
+            background: var(--box-bg); /* 테마 배경 */
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 0 10px;
+        }
+
+        /* 2. 중단: 테이블 (덱, 탑카드, 정보) */
+        #table-area {
+            flex: 1;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 50px;
+            /* 약간 어두운 패턴으로 테이블 느낌 내기 (테마 기반) */
+            background-color: var(--box-bg);
+            background-image: radial-gradient(var(--border-color) 1px, transparent 1px);
+            background-size: 20px 20px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.05); /* 안쪽 그림자로 깊이감 */
+        }
+
+        /* 3. 하단: 내 패 영역 */
+        #my-hand-area {
+            height: 170px;
+            background: var(--box-bg); /* 테마 배경 */
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px 10px;
+            overflow-x: auto;
+            /* 카드가 돋보이게 약간의 그림자 */
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.03);
+        }
+
+        /* 정보 박스 (색상, 턴) */
+        .info-box {
+            position: absolute;
+            top: 15px; right: 15px;
+            background: var(--box-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 10px 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            text-align: right;
+            font-size: 13px;
+            min-width: 90px;
+        }
+
+        /* 덱 스타일 보강 */
+        .deck-area {
+            width: 84px; height: 124px; /* 카드보다 약간 크게 */
+            border: 3px dashed var(--border-color);
+            border-radius: 10px;
+            background: rgba(0,0,0,0.02);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-weight: 600; color: var(--text-secondary);
+            transition: 0.2s all;
+        }
+        .deck-area:hover {
+            background: var(--box-bg);
+            border-color: var(--link-color);
+            color: var(--link-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        /* 턴 뱃지 */
+        .turn-badge { background: #2da44e; color: white; padding: 3px 8px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+        .opponent-badge { background: var(--box-bg); border: 1px solid var(--border-color); color: var(--text-primary); padding: 5px 12px; border-radius: 20px; display: flex; align-items: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
     </style>
     <link rel="icon" href="https://cdn.simpleicons.org/github/ffffff" type="image/svg+xml">
 </head>
@@ -39,7 +127,7 @@
         <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" width="30" style="border-radius:50%; opacity:1;">
         <a href="/" class="user-name">game-hub</a>
         <span style="color:var(--text-primary)">/</span>
-        <a href="#" class="repo-name">gameName</a>
+        <a href="#" class="repo-name">UNO!</a>
         <span class="badge">Public</span>
     </div>
     <button class="theme-btn" onclick="Core.toggleTheme()">Dark/Light</button>
@@ -77,7 +165,7 @@
         <div style="max-height: 400px; overflow-y: auto;">
             <div style="padding: 10px 16px; background:var(--bg-header); border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between;">
                 <span>방 목록</span>
-                <button class="btn-default" onclick="Core.loadRooms()" style="font-size:12px;">새로고침</button>
+                <button class="btn-default" onclick="Core.loadRooms()" style="font-size:12px;"><i class="fas fa-sync-alt"></i> 새로고침</button>
             </div>
             <ul id="room-list" style="list-style: none; padding: 0; margin: 0;"></ul>
         </div>
@@ -100,7 +188,32 @@
     <div id="game-tools-area" style="margin-bottom:10px;"></div>
 
     <div class="game-layout">
-        <div id="game-stage" class="game-stage"></div>
+
+        <div id="game-stage" class="game-stage">
+
+            <div id="opponents-area">
+                <span style="color:#999; font-size:13px;">접속 대기 중...</span>
+            </div>
+
+            <div id="table-area">
+                <div class="deck-area" onclick="reqDrawCard()">
+                    <div style="text-align:center;">DRAW<br>PILE</div>
+                </div>
+
+                <div id="top-card-area">
+                </div>
+
+                <div class="info-box">
+                    <div style="color:#666; font-size:11px;">Color</div>
+                    <div id="info-color" style="font-size:16px; font-weight:bold; margin-bottom:4px;">-</div>
+                    <div style="color:#666; font-size:11px;">Turn</div>
+                    <div id="info-turn" style="font-weight:600;">-</div>
+                </div>
+            </div>
+
+            <div id="my-hand-area" class="hand-container overlap">
+            </div>
+        </div>
 
         <div id="chat-container">
             <div class="box-header" style="padding: 8px;">채팅</div>
@@ -126,7 +239,7 @@
     </div>
 </div>
 
-<script src="/js/game-core.js"></script> <!-- 경로는 엔진엑스를 추가하면 수정할것.-->
-<script src="/js/card-core.js"></script> <!-- 카드 js-->
-<!--<script src="/js"></script> </body>-->   <!--추가 구현해야할 코드를 구현한뒤 연결-->
+<script src="/UNO/js/game-core.js"></script> <!-- 경로는 엔진엑스를 추가하면 수정할것.-->
+<script src="/UNO/js/card-core.js"></script> <!-- 카드 js-->
+<script src="/UNO/js/uno.js"></script> </body>   <!--추가 구현해야할 코드를 구현한뒤 연결-->
 </html>

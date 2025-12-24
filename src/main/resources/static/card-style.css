@@ -1,101 +1,170 @@
-/* [card-style.css] 카드 게임 전용 스타일 */
+/* [card-style.css] GitHub 테마 기반 차분한 UNO 카드 스타일 */
 
-/* 1. 카드 기본 틀 */
+/* 1. 카드 컨테이너 (위치 및 상호작용) */
 .card-area {
     display: inline-block;
-    perspective: 1000px; /* 3D 회전 효과 */
-    margin: 5px;
+    perspective: 1000px;
+    margin: 0 -12px; /* 겹침 정도 조정 */
     cursor: pointer;
-    transition: transform 0.2s;
+    /* 부드러운 움직임 */
+    transition: transform 0.2s cubic-bezier(0.3, 0, 0.5, 1), margin 0.2s;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
 }
 
 .card {
-    width: 80px;
-    height: 120px;
+    width: 84px;
+    height: 128px;
     position: relative;
-    transform-style: preserve-3d; /* 앞/뒤집기 효과 */
-    transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
-    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
-    border-radius: 8px;
-    background-color: white;
+    transform-style: preserve-3d;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    /* GitHub 스타일: 테두리로 구분하고 그림자는 최소화 */
+    border: 1px solid var(--border-color);
+    border-radius: 8px; /* GitHub 스타일 둥근 모서리 */
+    background-color: var(--box-bg); /* 테마 배경색 */
+    /* 아주 미세한 그림자로 입체감만 살짝 부여 */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
     user-select: none;
 }
 
-/* 카드 내용물 (숫자, 문양) */
+/* 2. 카드 앞면 내용물 */
 .card-face {
     position: absolute;
     width: 100%; height: 100%;
-    backface-visibility: hidden; /* 뒤집혔을 때 뒷면 숨김 */
-    border: 1px solid #ccc;
-    border-radius: 8px;
+    backface-visibility: hidden;
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: 5px;
-    box-sizing: border-box;
-    font-family: 'Courier New', monospace;
-    background: white;
+    padding: 8px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; /* GitHub 폰트 스택 */
+    font-weight: bold;
+    border-radius: 7px; /* 부모보다 살짝 작게 */
+    /* 기본 텍스트 색상 */
+    color: var(--text-primary);
+    background-color: var(--box-bg);
 }
 
-/* 색상 */
-.card.red .card-face { color: #d73a49; }
-.card.black .card-face { color: #24292f; }
+/* 3. 색상 테마 (GitHub 팔레트 활용, 플랫하고 차분하게) */
 
-/* 뒷면 (패턴) */
+/* RED: danger 색상 활용 */
+.card.RED .card-face {
+    background-color: #ffebe9; /* 밝은 테마용 연한 빨강 */
+    color: #cf222e; /* 텍스트 */
+    border: 1px solid #ffc1c0;
+}
+[data-theme="dark"] .card.RED .card-face {
+    background-color: rgba(248, 81, 73, 0.15); /* 어두운 테마용 */
+    color: #ff7b72;
+    border-color: rgba(248, 81, 73, 0.4);
+}
+
+/* BLUE: link 색상 활용 */
+.card.BLUE .card-face {
+    background-color: #e6f6ff;
+    color: #0969da;
+    border: 1px solid #b6e3ff;
+}
+[data-theme="dark"] .card.BLUE .card-face {
+    background-color: rgba(56, 139, 253, 0.15);
+    color: #58a6ff;
+    border-color: rgba(56, 139, 253, 0.4);
+}
+
+/* GREEN: success 색상 활용 */
+.card.GREEN .card-face {
+    background-color: #dafbe1;
+    color: #1a7f37;
+    border: 1px solid #96dcb0;
+}
+[data-theme="dark"] .card.GREEN .card-face {
+    background-color: rgba(46, 160, 67, 0.15);
+    color: #3fb950;
+    border-color: rgba(46, 160, 67, 0.4);
+}
+
+/* YELLOW: attention 색상 활용 */
+.card.YELLOW .card-face {
+    background-color: #fff8c5;
+    color: #9a6700;
+    border: 1px solid #eac54f;
+}
+[data-theme="dark"] .card.YELLOW .card-face {
+    background-color: rgba(187, 128, 9, 0.15);
+    color: #d29922;
+    border-color: rgba(187, 128, 9, 0.4);
+}
+
+/* BLACK (Wild): 테마 반전 */
+.card.BLACK .card-face {
+    background-color: var(--text-primary);
+    color: var(--box-bg);
+    border: 1px solid var(--border-color);
+}
+
+/* 4. 카드 뒷면 */
 .card-back {
     position: absolute;
     width: 100%; height: 100%;
     backface-visibility: hidden;
-    transform: rotateY(180deg); /* 기본적으로 뒤집혀 있음 */
-    background: repeating-linear-gradient(
-            45deg, #2da44e, #2da44e 10px, #238636 10px, #238636 20px
-    );
-    border-radius: 8px;
-    border: 2px solid white;
-}
-
-/* 2. 상태 클래스 */
-/* 카드가 뒤집힌 상태 */
-.card.flipped {
     transform: rotateY(180deg);
-}
-
-/* 마우스 올렸을 때 (선택 가능) */
-.card-area:hover .card {
-    transform: translateY(-10px);
-    box-shadow: 4px 8px 12px rgba(0,0,0,0.3);
-}
-/* 선택됨 (위로 쑥 올라옴) */
-.card-area.selected .card {
-    transform: translateY(-20px);
-    border: 2px solid #0969da;
-    box-shadow: 0 0 10px rgba(9, 105, 218, 0.5);
-}
-
-/* 3. 배치 레이아웃 */
-/* 부채꼴이나 겹쳐서 보여주기 */
-.hand-container {
+    /* 차분한 회색 배경 패턴 */
+    background-color: var(--bg-color);
+    background-image: radial-gradient(var(--border-color) 1px, transparent 1px);
+    background-size: 10px 10px;
+    border-radius: 8px;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 150px;
-    padding: 10px;
-    overflow: visible;
+}
+.card-back::after {
+    content: "UNO";
+    /* 테마의 링크 색상 사용 */
+    color: var(--link-color);
+    font-weight: 900;
+    font-size: 24px;
+    transform: rotate(-30deg);
+    opacity: 0.8;
 }
 
-/* 카드 겹치기 (원카드 스타일) */
-.hand-container.overlap .card-area {
-    margin-left: -40px; /* 겹침 정도 */
+/* 텍스트 크기 및 스타일 */
+.card-center-text {
+    font-size: 42px;
+    font-weight: 800;
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
 }
-.hand-container.overlap .card-area:first-child { margin-left: 0; }
-.hand-container.overlap .card-area:hover {
-    z-index: 100; /* 호버 시 맨 위로 */
-    margin-right: 40px; /* 공간 확보 */
+.card-corner-text {
+    font-size: 14px;
+    font-weight: 700;
 }
 
-/* 4. 애니메이션 효과 */
-@keyframes dealCard {
-    from { opacity: 0; transform: translateY(-100px) scale(0.5); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
+/* 5. 상호작용 및 애니메이션 */
+/* 호버 효과: 살짝 떠오름 */
+.card-area:hover {
+    z-index: 100;
+    margin: 0 -2px; /* 공간 확보 */
 }
-.card-anim-deal { animation: dealCard 0.4s ease-out forwards; }
+.card-area:hover .card {
+    transform: translateY(-15px);
+    /* 호버 시 그림자 약간 강조 */
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+}
+
+/* 선택 효과: 테마 강조색 테두리 */
+.card-area.selected .card {
+    transform: translateY(-20px);
+    border-color: var(--link-color);
+    box-shadow: 0 0 0 2px var(--link-color);
+}
+
+/* 딜링 애니메이션 (부드럽게) */
+@keyframes dealAnim {
+    from { opacity:0; transform:translateY(-30px); }
+    to { opacity:1; transform:translateY(0); }
+}
+.card-anim-deal {
+    animation: dealAnim 0.3s ease-out forwards;
+}

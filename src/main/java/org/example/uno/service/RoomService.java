@@ -1,6 +1,7 @@
 package org.example.uno.service;
 
 import org.example.uno.dto.BaseGameRoom;
+import org.example.uno.dto.UnoGameRoom;
 import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -10,11 +11,10 @@ public class RoomService {
     private final Map<String, BaseGameRoom> rooms = new ConcurrentHashMap<>();
 
     public BaseGameRoom createRoom(String name) {
-        // ★ 새 게임 만들 때 여기만 구현 클래스로 변경 (예: new OmokRoom(name))
-        // BaseGameRoom room = new MyNewGameRoom(name);
-        // rooms.put(room.getRoomId(), room);
-        // return room;
-        return null; // 템플릿이라 null 처리, 실제 구현 시 수정 필요
+        // 템플릿에서 이 부분만 수정
+        UnoGameRoom room = new UnoGameRoom(name); // ★ 여기 수정
+        rooms.put(room.getRoomId(), room);
+        return room;
     }
 
     public BaseGameRoom findRoom(String roomId) {
