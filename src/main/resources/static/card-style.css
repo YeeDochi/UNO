@@ -1,12 +1,11 @@
-/* [card-style.css] GitHub 테마 기반 차분한 UNO 카드 스타일 */
+/* [card-style.css] 눈이 편안한 딥 파스텔(Deep Pastel) 스타일 */
 
-/* 1. 카드 컨테이너 (위치 및 상호작용) */
+/* 1. 카드 컨테이너 */
 .card-area {
     display: inline-block;
     perspective: 1000px;
-    margin: 0 -12px; /* 겹침 정도 조정 */
+    margin: 0 -12px;
     cursor: pointer;
-    /* 부드러운 움직임 */
     transition: transform 0.2s cubic-bezier(0.3, 0, 0.5, 1), margin 0.2s;
     flex-shrink: 0;
     position: relative;
@@ -19,16 +18,14 @@
     position: relative;
     transform-style: preserve-3d;
     transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    /* GitHub 스타일: 테두리로 구분하고 그림자는 최소화 */
-    border: 1px solid var(--border-color);
-    border-radius: 8px; /* GitHub 스타일 둥근 모서리 */
-    background-color: var(--box-bg); /* 테마 배경색 */
-    /* 아주 미세한 그림자로 입체감만 살짝 부여 */
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    border-radius: 12px;
+    /* 그림자도 조금 더 진하게 처리하여 깊이감 부여 */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.1);
+    background-color: white;
     user-select: none;
 }
 
-/* 2. 카드 앞면 내용물 */
+/* 2. 카드 앞면 (공통) */
 .card-face {
     position: absolute;
     width: 100%; height: 100%;
@@ -37,71 +34,49 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: 8px;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; /* GitHub 폰트 스택 */
-    font-weight: bold;
-    border-radius: 7px; /* 부모보다 살짝 작게 */
-    /* 기본 텍스트 색상 */
-    color: var(--text-primary);
-    background-color: var(--box-bg);
+    padding: 6px;
+    font-family: 'Segoe UI', 'Roboto', sans-serif;
+    font-weight: 800;
+    border-radius: 12px;
+    /* 흰색 테두리 유지 */
+    border: 3px solid rgba(255, 255, 255, 0.9);
+    /* 텍스트 그림자 강화 (배경이 어두워지므로 흰 글씨가 더 잘 보임) */
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
 }
 
-/* 3. 색상 테마 (GitHub 팔레트 활용, 플랫하고 차분하게) */
+/* 3. 색상 테마 (밝기 줄임, 눈이 편한 색상) */
 
-/* RED: danger 색상 활용 */
+/* RED: 너무 쨍한 핑크 대신 차분한 토마토 레드 */
 .card.RED .card-face {
-    background-color: #ffebe9; /* 밝은 테마용 연한 빨강 */
-    color: #cf222e; /* 텍스트 */
-    border: 1px solid #ffc1c0;
-}
-[data-theme="dark"] .card.RED .card-face {
-    background-color: rgba(248, 81, 73, 0.15); /* 어두운 테마용 */
-    color: #ff7b72;
-    border-color: rgba(248, 81, 73, 0.4);
+    background-color: #e55039;
+    color: white;
 }
 
-/* BLUE: link 색상 활용 */
+/* BLUE: 형광 하늘색 대신 깊이 있는 오션 블루 */
 .card.BLUE .card-face {
-    background-color: #e6f6ff;
-    color: #0969da;
-    border: 1px solid #b6e3ff;
-}
-[data-theme="dark"] .card.BLUE .card-face {
-    background-color: rgba(56, 139, 253, 0.15);
-    color: #58a6ff;
-    border-color: rgba(56, 139, 253, 0.4);
+    background-color: #4a69bd;
+    color: white;
 }
 
-/* GREEN: success 색상 활용 */
+/* GREEN: 눈부신 민트 대신 안정적인 포레스트 그린 */
 .card.GREEN .card-face {
-    background-color: #dafbe1;
-    color: #1a7f37;
-    border: 1px solid #96dcb0;
-}
-[data-theme="dark"] .card.GREEN .card-face {
-    background-color: rgba(46, 160, 67, 0.15);
-    color: #3fb950;
-    border-color: rgba(46, 160, 67, 0.4);
+    background-color: #20bf6b;
+    color: white;
 }
 
-/* YELLOW: attention 색상 활용 */
+/* YELLOW: 흰 글씨가 잘 보이도록 오렌지빛이 도는 딥 옐로우 */
 .card.YELLOW .card-face {
-    background-color: #fff8c5;
-    color: #9a6700;
-    border: 1px solid #eac54f;
-}
-[data-theme="dark"] .card.YELLOW .card-face {
-    background-color: rgba(187, 128, 9, 0.15);
-    color: #d29922;
-    border-color: rgba(187, 128, 9, 0.4);
+    background-color: #f39c12;
+    color: white;
 }
 
-/* BLACK (Wild): 테마 반전 */
+/* BLACK (Wild): 묵직한 다크 그레이 */
 .card.BLACK .card-face {
-    background-color: var(--text-primary);
-    color: var(--box-bg);
-    border: 1px solid var(--border-color);
+    background-color: #2f3640;
+    color: white;
+    border-color: #718093;
 }
+
 
 /* 4. 카드 뒷면 */
 .card-back {
@@ -109,62 +84,56 @@
     width: 100%; height: 100%;
     backface-visibility: hidden;
     transform: rotateY(180deg);
-    /* 차분한 회색 배경 패턴 */
-    background-color: var(--bg-color);
-    background-image: radial-gradient(var(--border-color) 1px, transparent 1px);
-    background-size: 10px 10px;
-    border-radius: 8px;
+    background-color: #1e272e; /* 더 어두운 배경 */
+    /* 패턴 색상도 톤 다운 */
+    background-image: repeating-linear-gradient(45deg, #1e272e 0, #1e272e 10px, #2c3e50 10px, #2c3e50 20px);
+    border-radius: 12px;
+    border: 3px solid rgba(255,255,255,0.8);
     display: flex;
     justify-content: center;
     align-items: center;
 }
 .card-back::after {
     content: "UNO";
-    /* 테마의 링크 색상 사용 */
-    color: var(--link-color);
+    color: #f39c12; /* 딥 옐로우 */
     font-weight: 900;
     font-size: 24px;
     transform: rotate(-30deg);
-    opacity: 0.8;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
 }
 
-/* 텍스트 크기 및 스타일 */
+/* 텍스트 크기 */
 .card-center-text {
-    font-size: 42px;
-    font-weight: 800;
+    font-size: 48px;
     position: absolute;
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
 }
 .card-corner-text {
-    font-size: 14px;
-    font-weight: 700;
+    font-size: 18px;
 }
 
-/* 5. 상호작용 및 애니메이션 */
-/* 호버 효과: 살짝 떠오름 */
+/* 5. 상호작용 */
 .card-area:hover {
     z-index: 100;
-    margin: 0 -2px; /* 공간 확보 */
+    margin: 0 -2px;
 }
 .card-area:hover .card {
-    transform: translateY(-15px);
-    /* 호버 시 그림자 약간 강조 */
-    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    transform: translateY(-20px) scale(1.05);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.2);
 }
 
-/* 선택 효과: 테마 강조색 테두리 */
 .card-area.selected .card {
-    transform: translateY(-20px);
-    border-color: var(--link-color);
-    box-shadow: 0 0 0 2px var(--link-color);
+    transform: translateY(-25px);
+    /* 선택 효과: 딥 옐로우 빛 */
+    box-shadow: 0 0 0 4px rgba(243, 156, 18, 0.6), 0 12px 24px rgba(0,0,0,0.2);
 }
 
-/* 딜링 애니메이션 (부드럽게) */
+/* 딜링 애니메이션 */
 @keyframes dealAnim {
-    from { opacity:0; transform:translateY(-30px); }
-    to { opacity:1; transform:translateY(0); }
+    from { opacity:0; transform:translateY(-50px) rotate(-5deg); }
+    to { opacity:1; transform:translateY(0) rotate(0); }
 }
 .card-anim-deal {
-    animation: dealAnim 0.3s ease-out forwards;
+    animation: dealAnim 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }

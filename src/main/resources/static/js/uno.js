@@ -134,22 +134,33 @@ function updateInfoText(snapshot, myId) {
     const turnSpan = document.getElementById('info-turn');
     const startBtn = document.getElementById('startBtn');
 
-    // 색상 표시 (테마 색상 활용)
     if (colorSpan) {
         const colorMap = {
-            'RED':'var(--color-danger-fg)',
-            'BLUE':'var(--color-accent-fg)',
-            'GREEN':'var(--color-success-fg)',
-            'YELLOW':'var(--color-attention-fg)',
-            'BLACK':'var(--text-primary)'
+            // card-style.css와 일치하는 톤 다운된 색상
+            'RED': '#e55039',
+            'BLUE': '#4a69bd',
+            'GREEN': '#20bf6b',
+            'YELLOW': '#f39c12',
+            'BLACK': 'var(--text-primary)'
         };
+
         const cText = snapshot.currentColor || '-';
-        colorSpan.innerHTML = cText === '-' ? '-' : `<i class="fas fa-circle"></i> ${cText}`;
-        // style.css에 정의된 변수가 없으면 기본값 사용
-        colorSpan.style.color = colorMap[cText] || 'var(--text-primary)';
+
+        if (cText !== '-') {
+            const colorCode = colorMap[cText] || 'var(--text-primary)';
+            // 네온 효과(shadow)도 조금 줄여서 차분하게
+            colorSpan.innerHTML = `<i class="fas fa-circle" style="color:${colorCode};"></i> ${cText}`;
+            colorSpan.style.color = colorCode;
+            colorSpan.style.textShadow = 'none'; // 눈부심 방지 위해 제거
+            colorSpan.style.fontWeight = 'bold';
+        } else {
+            // ... (기존 유지)
+            colorSpan.innerText = '-';
+            colorSpan.style.color = 'var(--text-primary)';
+            colorSpan.style.textShadow = 'none';
+        }
     }
 
-    // 턴 표시
     if (turnSpan) {
         if (!snapshot.playing) {
             turnSpan.innerText = "대기 중";
@@ -162,7 +173,7 @@ function updateInfoText(snapshot, myId) {
         }
     }
 
-    // 버튼 상태
+    // 버튼 상태 (기존 유지)
     if (startBtn) {
         startBtn.disabled = snapshot.playing;
         startBtn.innerText = snapshot.playing ? "진행 중" : "게임 시작";
@@ -212,16 +223,22 @@ function renderMyHand() {
             reqPlayCard(card);
         });
 
-        // [수정 포인트] 새로 추가된 카드(인덱스가 이전 패 크기 이상)에만 애니메이션 적용
-        // 카드를 냈을 때는 prevHandSize가 더 크므로 애니메이션이 작동하지 않음.
+        // [수정 포인트] 새로 추가된 카드 애니메이션 처리
         if (idx >= UnoGame.prevHandSize) {
-            // 약간의 시차를 두고 애니메이션 시작
-            cardEl.style.animationDelay = `${(idx - UnoGame.prevHandSize) * 0.1}s`;
+            const delay = (idx - UnoGame.prevHandSize) * 0.1;
+            cardEl.style.animationDelay = `${delay}s`;
             cardEl.classList.add('card-anim-deal');
+
+            // [추가] 애니메이션이 끝나면 클래스를 제거하여 CSS 충돌 방지
+            // (애니메이션의 opacity:1이 남아서 흐려지지 않는 현상 해결)
+            setTimeout(() => {
+                cardEl.classList.remove('card-anim-deal');
+            }, (delay + 0.4) * 1000 + 100); // 애니메이션 시간(0.3s~0.4s)보다 조금 넉넉하게
         }
 
         // 내 턴 아니면 흐리게 및 클릭 불가 처리
         if (!UnoGame.isMyTurn) {
+            // 이제 card-anim-deal 클래스가 사라지면 이 스타일이 정상 적용됩니다.
             cardEl.style.opacity = 0.7;
             cardEl.style.cursor = "not-allowed";
             cardEl.style.filter = "grayscale(50%)";
@@ -230,7 +247,7 @@ function renderMyHand() {
         container.appendChild(cardEl);
     });
 
-    // 렌더링 후 현재 패 크기를 저장 (다음 비교를 위해)
+    // 렌더링 후 현재 패 크기를 저장
     UnoGame.prevHandSize = UnoGame.myHand.length;
 }
 
@@ -240,20 +257,51 @@ function reqDrawCard() {
     Core.sendAction({ type: 'DRAW_CARD' });
 }
 
+let pendingWildCard = null;
+
+// [수정] 카드 내기 요청
 function reqPlayCard(card) {
     if (!UnoGame.isMyTurn) return Core.showAlert("아직 내 턴이 아닙니다.");
 
     if (card.color === 'BLACK') {
-        const newColor = prompt("색상을 선택하세요 (RED, BLUE, GREEN, YELLOW)", "RED");
-        if (!newColor || !['RED', 'BLUE', 'GREEN', 'YELLOW'].includes(newColor.toUpperCase())) {
-            return Core.showAlert("올바른 색상을 선택해주세요.");
-        }
-        Core.sendAction({
-            type: 'PLAY_CARD', color: 'BLACK', rank: card.rank, newColor: newColor.toUpperCase()
-        });
+        // [변경] prompt 대신 커스텀 모달 띄우기
+        pendingWildCard = card; // 현재 낼 카드를 임시 저장
+        document.getElementById('color-modal').classList.remove('hidden');
+        // 드롭다운 초기화 (기본값 RED)
+        document.getElementById('color-select').value = 'RED';
     } else {
-        Core.sendAction({ type: 'PLAY_CARD', color: card.color, rank: card.rank });
+        // 일반 카드는 바로 전송
+        Core.sendAction({
+            type: 'PLAY_CARD',
+            color: card.color,
+            rank: card.rank
+        });
     }
+}
+
+// [추가] 색상 선택 모달 확인 버튼 클릭 시
+function submitColorSelection() {
+    const selectEl = document.getElementById('color-select');
+    const selectedColor = selectEl.value; // RED, BLUE, GREEN, YELLOW
+
+    if (!pendingWildCard) return; // 에러 방지
+
+    // 서버로 전송
+    Core.sendAction({
+        type: 'PLAY_CARD',
+        color: 'BLACK',
+        rank: pendingWildCard.rank,
+        newColor: selectedColor
+    });
+
+    // 모달 닫기 및 초기화
+    closeColorModal();
+}
+
+// [추가] 색상 선택 모달 닫기 (취소 시)
+function closeColorModal() {
+    document.getElementById('color-modal').classList.add('hidden');
+    pendingWildCard = null;
 }
 
 // --- [4] 초기화 ---

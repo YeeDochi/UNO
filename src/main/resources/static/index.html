@@ -142,7 +142,26 @@
         </div>
     </div>
 </div>
+<div id="color-modal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:2000;">
+    <div class="box" style="width:300px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+        <h3 style="margin-top:0; text-align:center;">🌈 색상 선택</h3>
+        <p style="text-align:center; color:var(--text-secondary); font-size:13px; margin-bottom:15px;">와일드 카드의 색상을 정해주세요.</p>
 
+        <div style="margin-bottom:20px;">
+            <select id="color-select" style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:6px; background:var(--input-bg); color:var(--text-primary); font-size:14px;">
+                <option value="RED">🔴 Red (빨강)</option>
+                <option value="BLUE">🔵 Blue (파랑)</option>
+                <option value="GREEN">🟢 Green (초록)</option>
+                <option value="YELLOW">🟡 Yellow (노랑)</option>
+            </select>
+        </div>
+
+        <div style="display:flex; gap:10px;">
+            <button class="btn-default" onclick="closeColorModal()" style="flex:1;">취소</button>
+            <button class="btn-primary" onclick="submitColorSelection()" style="flex:1;">확인</button>
+        </div>
+    </div>
+</div>
 <div id="login-screen" class="container" style="max-width: 400px; margin-top: 50px;">
     <div class="box">
         <div class="box-header">게임 입장</div>
