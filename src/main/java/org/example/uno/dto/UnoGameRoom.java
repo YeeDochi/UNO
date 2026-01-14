@@ -275,6 +275,17 @@ public class UnoGameRoom extends BaseGameRoom {
         return snapshot;
     }
 
+    public int getTotalScore(String senderId) {
+        Player player = users.get(senderId);
+        if (player == null) return 0;
+
+        List<UnoCard> hand = (List<UnoCard>) player.getAttribute("hand");
+        if (hand != null && hand.isEmpty()) {
+            return 50; // 승자
+        }
+        return 0; // 패자
+    }
+
     private GameMessage createSystemMessage(String type, String content) {
         return GameMessage.builder()
                 .type(type)

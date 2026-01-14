@@ -6,42 +6,44 @@ import org.example.uno.dto.Player;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import org.example.common.service.ScoreSender;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class GameService {
     private final RoomService roomService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final ScoreSender scoreSender;
 
     // 입장 처리
-
-// [GameService.java] handleGameAction 등 다른 메서드는 기존 유지
-// join 메서드만 아래와 같이 수정해주세요.
-
     public void join(String roomId, GameMessage message) {
         BaseGameRoom room = roomService.findRoom(roomId);
         if (room == null) return;
 
-        // [수정] 이미 존재하는 유저라면 덮어쓰지 않고 기존 정보 유지 (패 보존)
-        Player existingPlayer = room.getUsers().get(message.getSenderId());
-        if (existingPlayer == null) {
-            room.enterUser(new Player(message.getSender(), message.getSenderId()));
-        } else {
-            // 닉네임이 바뀌었을 수도 있으니 업데이트
-            existingPlayer.setNickname(message.getSender());
+        Player newPlayer = new Player(message.getSender(), message.getSenderId());
+
+        // [추가] 로그인 유저 체크 및 ID 저장 로직
+        if (message.getData() != null && message.getData().containsKey("dbUsername")) {
+            String realId = (String) message.getData().get("dbUsername");
+            if (realId != null && !realId.equals("null") && !realId.isEmpty()) {
+                newPlayer.setDbUsername(realId);
+                System.out.println("✅ 로그인 유저 입장: " + newPlayer.getSender() + " (" + realId + ")");
+            }
         }
+
+        room.enterUser(newPlayer);
 
         message.setType("JOIN");
         message.setContent(message.getSender() + "님이 입장하셨습니다.");
         broadcast(roomId, message);
 
-        // [동기화] 현재 게임 상태를 입장한 유저에게만이라도 확실히 보내야 함
-        // 여기서는 전체에게 뿌려서 모두의 화면을 최신으로 맞춤
         GameMessage syncMsg = new GameMessage();
         syncMsg.setType("SYNC");
         syncMsg.setRoomId(roomId);
         syncMsg.setSender("SYSTEM");
-        syncMsg.setData(room.getGameSnapshot());
+        syncMsg.setData(room.getGameSnapshot()); // BaseGameRoom에 추가한 메서드 호출
 
         broadcast(roomId, syncMsg);
     }
@@ -54,15 +56,42 @@ public class GameService {
         GameMessage result = room.handleAction(message);
 
         if (result != null) {
+            // [추가] 게임 종료 신호가 오면 점수 저장 로직 실행
+            if ("GAME_OVER".equals(result.getType())) {
+                // 방에 있는 모든 유저 정보를 넘겨줌
+                endGame(roomId, new ArrayList<>(room.getUsers().values()));
+            }
+
             broadcast(roomId, result);
         }
     }
 
     public void chat(String roomId, GameMessage message) {
-        // 정답 체크 로직이 필요하면 여기서 room.checkAnswer() 등을 호출 가능
         broadcast(roomId, message);
     }
+    public void endGame(String roomId, List<Player> players) {
+        BaseGameRoom room = roomService.findRoom(roomId);
+        if (room == null) return;
 
+        for (Player player : players) {
+            if (player.getDbUsername() == null) {
+                continue;
+            }
+
+            int totalScore = 0;
+            if (room instanceof org.example.uno.dto.UnoGameRoom) {
+                org.example.uno.dto.UnoGameRoom unoRoom = (org.example.uno.dto.UnoGameRoom) room;
+                totalScore = unoRoom.getTotalScore(player.getSenderId());
+            }
+
+            scoreSender.sendScore(
+                    player.getDbUsername(),
+                    "UNO",
+                    totalScore,
+                    true
+            );
+        }
+    }
     public void exit(String roomId, GameMessage message) {
         BaseGameRoom room = roomService.findRoom(roomId);
         if (room != null) {

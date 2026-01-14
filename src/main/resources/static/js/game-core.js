@@ -77,7 +77,6 @@ const Core = (function() {
             .catch(err => showAlert("방 생성 실패: " + err));
     }
 
-    // --- [중요 수정] 입장 로직 ---
     function joinRoom(roomId, roomName) {
         fetch(`${CONFIG.apiPath}/api/rooms/${roomId}`)
             .then(res => res.json())
@@ -90,10 +89,6 @@ const Core = (function() {
                 document.getElementById('game-screen').classList.remove('hidden');
                 document.getElementById('messages').innerHTML = '';
 
-                // ★★★ 여기 있던 stage.innerHTML = '' 코드를 삭제했습니다 ★★★
-                // 이제 index.html에 작성한 뼈대가 지워지지 않고 유지됩니다.
-
-                // 게임별 초기화 로직 실행
                 if (GameImpl.onEnterRoom) GameImpl.onEnterRoom();
 
                 connectStomp(roomId);
@@ -106,7 +101,14 @@ const Core = (function() {
         stompClient = Stomp.over(socket);
         stompClient.debug = null;
         stompClient.connect({}, function () {
-            stompClient.send(`/app/${roomId}/join`, {}, JSON.stringify({ type: 'JOIN', sender: myNickname, senderId: myId }));
+            // [수정] 로그인 정보를 함께 전송
+            const dbUsername = localStorage.getItem('dbUsername');
+            stompClient.send(`/app/${roomId}/join`, {}, JSON.stringify({
+                type: 'JOIN',
+                sender: myNickname,
+                senderId: myId,
+                data: { dbUsername: dbUsername }
+            }));
             stompClient.subscribe(`/topic/${roomId}`, function (msg) {
                 handleCommonMessage(JSON.parse(msg.body));
             });
@@ -174,11 +176,37 @@ const Core = (function() {
         closeConfirm();
     }
 
+    // [추가] 랭킹 조회 함수
+    function showRanking() {
+        fetch(`${CONFIG.apiPath}/api/rooms/rankings`)
+            .then(res => res.json())
+            .then(data => {
+                const list = document.getElementById('ranking-list-content');
+                list.innerHTML = '';
+                if (!data.rankings || data.rankings.length === 0) {
+                    list.innerHTML = '<li>랭킹 정보가 없습니다.</li>';
+                    return;
+                }
+                data.rankings.forEach((r, index) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span>${index + 1}. ${r.username}</span><span>${r.score}점</span>`;
+                    list.appendChild(li);
+                });
+                document.getElementById('overall-ranking-modal').classList.remove('hidden');
+            })
+            .catch(err => showAlert("랭킹 조회 실패: " + err));
+    }
+
+    function closeOverallRanking() {
+        document.getElementById('overall-ranking-modal').classList.add('hidden');
+    }
+
     return {
         init, login, createRoom, joinRoom, loadRooms, sendChat,
         showAlert, closeAlert,
-        showConfirm, closeConfirm, confirmOk, // 모달 함수들 공개
+        showConfirm, closeConfirm, confirmOk,
         closeRanking, exitRoom, toggleTheme,
+        showRanking, closeOverallRanking, // 랭킹 함수 공개
         startGame: () => sendActionInternal({ actionType: 'START' }),
         sendAction: (data) => sendActionInternal(data)
     };

@@ -4,6 +4,8 @@ import org.example.uno.dto.BaseGameRoom;
 import org.example.uno.service.RoomService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import org.example.common.service.ScoreSender;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
@@ -12,6 +14,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RoomController {
     private final RoomService roomService;
+    private final ScoreSender scoreSender;
 
     @RequestMapping(method = RequestMethod.HEAD)
     public void healthCheck() {
@@ -33,5 +36,10 @@ public class RoomController {
     @GetMapping("/{roomId}")
     public BaseGameRoom getRoom(@PathVariable String roomId) {
         return roomService.findRoom(roomId);
+    }
+
+    @GetMapping("/rankings")
+    public ResponseEntity<Object> getRanking() {
+        return scoreSender.ranking("UNO");
     }
 }

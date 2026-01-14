@@ -10,6 +10,7 @@ import java.util.UUID;
 public class Player {
     private String id;        // 고유 ID (UUID)
     private String nickname;  // 닉네임
+    private String dbUsername; // DB에 저장된 실제 유저 ID
 
     private Map<String, Object> attributes = new HashMap<>();
 
