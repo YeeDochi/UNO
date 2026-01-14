@@ -81,14 +81,13 @@ public class GameService {
             int totalScore = 0;
             if (room instanceof org.example.uno.dto.UnoGameRoom) {
                 org.example.uno.dto.UnoGameRoom unoRoom = (org.example.uno.dto.UnoGameRoom) room;
-                totalScore = unoRoom.getTotalScore(player.getSenderId());
+                //totalScore = unoRoom.getTotalScore(player.getSenderId());
             }
 
             scoreSender.sendScore(
                     player.getDbUsername(),
                     "UNO",
-                    totalScore,
-                    true
+                    totalScore
             );
         }
     }
