@@ -21,7 +21,10 @@ public class GameService {
     public void join(String roomId, GameMessage message) {
         BaseGameRoom room = roomService.findRoom(roomId);
         if (room == null) return;
-
+        if (room.isPlaying()) {
+            System.out.println("❌ 입장 거부: 이미 게임 진행 중인 방 (" + roomId + ")");
+            return;
+        }
         Player newPlayer = new Player(message.getSender(), message.getSenderId());
 
         // [추가] 로그인 유저 체크 및 ID 저장 로직
@@ -79,15 +82,11 @@ public class GameService {
             }
 
             int totalScore = 0;
-            if (room instanceof org.example.uno.dto.UnoGameRoom) {
-                org.example.uno.dto.UnoGameRoom unoRoom = (org.example.uno.dto.UnoGameRoom) room;
-                //totalScore = unoRoom.getTotalScore(player.getSenderId());
-            }
 
             scoreSender.sendScore(
                     player.getDbUsername(),
                     "UNO",
-                    totalScore
+                    -1
             );
         }
     }
