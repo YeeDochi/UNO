@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>game-hub/UNO!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/style.css">
     <link rel="stylesheet" href="/UNO/card-style.css"> <!--카드 css-->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
@@ -121,6 +122,86 @@
         #overall-ranking-modal ul { list-style: none; padding: 0; margin: 0; }
         #overall-ranking-modal li { display: flex; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid var(--border-color); }
         #overall-ranking-modal li:last-child { border-bottom: none; }
+        
+        @media (max-width: 768px) {
+        /* 1. 전체 레이아웃 & 여백 제거 */
+        body, html { overflow-x: hidden; width: 100%; }
+        /* 컨테이너 좌우 패딩을 최소화하여 화면을 넓게 씀 */
+        .container { padding: 0 5px !important; width: 100%; box-sizing: border-box; }
+
+        /* 2. [수정됨] 헤더: game-hub / UNO! 모두 표시 */
+        header { padding: 8px 10px; gap: 5px; }
+        .repo-breadcrumb { font-size: 15px; display: flex; align-items: center; flex-wrap: nowrap; }
+        
+        /* 숨겼던 repo-name과 구분자(/)를 다시 보이게 설정 */
+        .repo-breadcrumb .user-name { display: inline-block !important; }
+        .repo-breadcrumb .repo-name { display: inline-block !important; }
+        .repo-breadcrumb span { display: inline-block !important; } /* 슬래시(/) */
+        
+        /* 공간이 부족하면 'Public' 뱃지만 숨김 (선택사항) */
+        .badge { display: none !important; } 
+        
+        /* 로그인 정보는 좁은 화면에서 닉네임만 간단히 표시 */
+        #loggedInArea span { max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        /* 3. [수정됨] 대기실 & 방 목록 박스 꽉 채우기 */
+        /* width: 90% -> 100%로 변경하여 우측 빈 공간 제거 */
+        .box { width: 100% !important; max-width: none; margin: 0 auto; }
+        
+        /* 방 목록 헤더 정렬 */
+        #room-list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        /* "방 목록" 글자 줄바꿈 방지 */
+        #room-list-header span { white-space: nowrap; margin-right: 10px; }
+        
+        /* 버튼들이 한 줄을 꽉 채우도록 */
+        #lobby-screen .box > div:nth-child(2) { flex-direction: column !important; gap: 8px !important; }
+        #roomNameInput, #lobby-screen button { width: 100% !important; margin: 0 !important; box-sizing: border-box; }
+
+        /* 4. 게임 화면 레이아웃 */
+        .game-layout { flex-direction: column !important; gap: 15px; }
+        .game-stage, #chat-container { width: 100% !important; max-width: 100%; box-sizing: border-box; }
+        
+        /* 카드 크기 최적화 */
+        .card { width: 60px !important; height: 90px !important; }
+        .card-center-text { font-size: 32px !important; }
+        .card-corner-text { font-size: 12px !important; }
+        .deck-area { width: 64px !important; height: 94px !important; font-size: 12px !important; }
+
+        /* 테이블 영역 중앙 정렬 */
+        #table-area { 
+            flex-direction: column !important;
+            gap: 10px !important;
+            justify-content: center !important;
+        }
+        
+        /* 카드 그룹 (덱+현재카드) 가로 배치 */
+        .center-table-group {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+        }
+
+        /* 정보 박스 위치 조정 */
+        .info-box { 
+            position: static !important;
+            margin-top: 5px;
+            width: fit-content;
+            margin: 5px auto 0 auto;
+            display: flex; gap: 15px;
+            background: rgba(0,0,0,0.03);
+            box-shadow: none;
+        }
+        .info-box > div { margin: 0 !important; text-align: left !important; }
+        
+        #my-hand-area { height: 130px !important; padding: 10px 5px !important; }
+        #chat-container { height: 400px !important; }
+    }
     </style>
     <link rel="icon" href="https://cdn.simpleicons.org/github/ffffff" type="image/svg+xml">
 </head>
@@ -204,8 +285,8 @@
             <button class="btn-default" onclick="Core.showRanking()">🏆 랭킹</button>
         </div>
         <div style="max-height: 400px; overflow-y: auto;">
-            <div style="padding: 10px 16px; background:var(--bg-header); border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between;">
-                <span>방 목록</span>
+            <div id="room-list-header" style="padding: 10px 16px; background:var(--bg-header); border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between;">
+                    <span>방 목록</span>
                 <button class="btn-default" onclick="Core.loadRooms()" style="font-size:12px;"><i class="fas fa-sync-alt"></i> 새로고침</button>
             </div>
             <ul id="room-list" style="list-style: none; padding: 0; margin: 0;"></ul>
@@ -236,21 +317,22 @@
                 <span style="color:#999; font-size:13px;">접속 대기 중...</span>
             </div>
 
-            <div id="table-area">
+        <div id="table-area">
+            <div class="center-table-group">
                 <div class="deck-area" onclick="reqDrawCard()">
                     <div style="text-align:center;">DRAW<br>PILE</div>
                 </div>
-
                 <div id="top-card-area">
                 </div>
-
-                <div class="info-box">
-                    <div style="color:#666; font-size:11px;">Color</div>
-                    <div id="info-color" style="font-size:16px; font-weight:bold; margin-bottom:4px;">-</div>
-                    <div style="color:#666; font-size:11px;">Turn</div>
-                    <div id="info-turn" style="font-weight:600;">-</div>
-                </div>
             </div>
+
+            <div class="info-box">
+                <div style="color:#666; font-size:11px;">Color</div>
+                <div id="info-color" style="font-size:16px; font-weight:bold; margin-bottom:4px;">-</div>
+                <div style="color:#666; font-size:11px;">Turn</div>
+                <div id="info-turn" style="font-weight:600;">-</div>
+            </div>
+        </div>
 
             <div id="my-hand-area" class="hand-container overlap">
             </div>
